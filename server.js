@@ -42,4 +42,10 @@ app.use(express.static('public'));
 
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
-});
+}
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});          
+          
+);
