@@ -1,28 +1,45 @@
+require('dotenv').config();
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
-const validateLogin = require('./auth');
+const cors = require('cors');
+const fetch = require('node-fetch');
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+// Configuração do CORS
+app.use(cors({
+  origin: ['https://pegavisao.com', 'http://localhost:5500'],
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.get('/api/confrontos', validateLogin, (req, res) => {
-  const data = fs.readFileSync(path.join(__dirname, 'times.json'));
-  res.json(JSON.parse(data));
+// Rota do proxy
+app.get('/api/team/:slug', async (req, res) => {
+  try {
+    const apiUrl = `https://api.praxisagencia.com.br/cartolafc/team/${req.params.slug}`;
+    
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${process.env.API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API responded with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-app.post('/api/confrontos', validateLogin, (req, res) => {
-  fs.writeFileSync(
-    path.join(__dirname, 'times.json'),
-    JSON.stringify(req.body, null, 2)
-  );
-  res.sendStatus(200);
-});
+// Servir arquivos estáticos
+app.use(express.static('public'));
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Proxy server running on port ${PORT}`);
 });
