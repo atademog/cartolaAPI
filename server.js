@@ -20,7 +20,7 @@ app.get('/api/team/:slug', async (req, res) => {
     
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer ${process.env.API_TOKEN}`,
+        'Authorization': `${process.env.API_TOKEN}`,
         'Content-Type': 'application/json'
       }
     });
