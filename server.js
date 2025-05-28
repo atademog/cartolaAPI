@@ -13,6 +13,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Middleware de log
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // Rota do proxy
 app.get('/api/team/:slug', async (req, res) => {
   try {
@@ -20,7 +26,7 @@ app.get('/api/team/:slug', async (req, res) => {
     
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `${process.env.API_TOKEN}`,
+        'Authorization': `Bearer ${process.env.API_TOKEN}`,
         'Content-Type': 'application/json'
       }
     });
@@ -40,12 +46,12 @@ app.get('/api/team/:slug', async (req, res) => {
 // Servir arquivos estáticos
 app.use(express.static('public'));
 
+// Rota de health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);
-}
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});          
-          
-);
+});
